@@ -60,6 +60,35 @@ $latest = $conn->query("
     ORDER BY t.created_at DESC
     LIMIT 5
 ");
+
+/* HITUNG PESAN BARU (TANPA is_read) */
+$stmtNotif = $conn->prepare("
+    SELECT COUNT(*) AS total
+    FROM messages m
+    JOIN tickets t ON m.ticket_id = t.id
+    WHERE t.user_id = ?
+      AND m.user_id != ?
+");
+$stmtNotif->bind_param("ii", $user_id, $user_id);
+$stmtNotif->execute();
+$unreadMessage = $stmtNotif->get_result()->fetch_assoc()['total'];
+
+/* PREVIEW PESAN TERBARU */
+$stmtPreview = $conn->prepare("
+    SELECT m.message, m.created_at, u.name
+    FROM messages m
+    JOIN tickets t ON m.ticket_id = t.id
+    JOIN users u ON m.user_id = u.id
+    WHERE t.user_id = ?
+      AND m.user_id != ?
+    ORDER BY m.created_at DESC
+    LIMIT 5
+");
+$stmtPreview->bind_param("ii", $user_id, $user_id);
+$stmtPreview->execute();
+$previewMessages = $stmtPreview->get_result();
+
+
 ?>
 
 <!DOCTYPE html>
@@ -71,6 +100,8 @@ $latest = $conn->query("
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -161,12 +192,62 @@ $latest = $conn->query("
 
     <!-- TOP BAR -->
     <div class="topbar d-flex justify-content-between align-items-center">
-        <div>
-            <h5 class="mb-0">Selamat datang 👋</h5>
-            <small class="text-muted"><?= $_SESSION['email']; ?></small>
-        </div>
-        <span class="badge bg-primary">Online</span>
+    <div>
+        <h5 class="mb-0">Selamat datang 👋</h5>
+        <small class="text-muted"><?= $_SESSION['email']; ?></small>
     </div>
+
+    <div class="d-flex align-items-center gap-3">
+
+        <!-- DROPDOWN PESAN -->
+<div class="dropdown">
+    <a href="#" class="text-decoration-none text-dark position-relative"
+       data-bs-toggle="dropdown">
+        <i class="bi bi-chat-dots fs-5"></i>
+
+        <?php if ($unreadMessage > 0): ?>
+            <span class="position-absolute top-0 start-100 translate-middle
+                         badge rounded-pill bg-danger">
+                <?= $unreadMessage ?>
+            </span>
+        <?php endif; ?>
+    </a>
+
+    <div class="dropdown-menu dropdown-menu-end shadow p-2"
+         style="width: 300px;">
+
+        <h6 class="dropdown-header">Pesan Terbaru</h6>
+
+        <?php if ($previewMessages->num_rows > 0): ?>
+            <?php while ($msg = $previewMessages->fetch_assoc()): ?>
+                <a href="ticket-user.php"
+                   class="dropdown-item small">
+                    <strong><?= htmlspecialchars($msg['name']); ?></strong><br>
+                    <span class="text-muted">
+                        <?= htmlspecialchars(substr($msg['message'], 0, 40)); ?>...
+                    </span>
+                </a>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <span class="dropdown-item text-muted small">
+                Tidak ada pesan baru
+            </span>
+        <?php endif; ?>
+
+        <div class="dropdown-divider"></div>
+        <a href="ticket-user.php" class="dropdown-item text-center small fw-semibold">
+            Lihat semua tiket
+        </a>
+    </div>
+</div>
+
+
+        <!-- STATUS ONLINE -->
+        <span class="badge bg-primary">Online</span>
+
+    </div>
+</div>
+
 
         <!-- STAT CARDS -->
         <div class="row g-4 mb-4">
@@ -211,6 +292,103 @@ $latest = $conn->query("
             Pastikan data yang dikirim lengkap agar proses lebih cepat.
         </p>
     </div>
+    <!-- INFORMASI & GLOSARIUM (ACCORDION) -->
+<div class="card p-4 card-stat mt-4">
+    <h5 class="mb-3">📘 Informasi & Glosarium IT Ticket</h5>
+
+    <div class="accordion" id="accordionGlossary">
+
+        <!-- APA IT TICKETING -->
+        <div class="accordion-item border-0 mb-2">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed rounded-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#itTicketing">
+                    🎫 Apa itu IT Ticketing System?
+                </button>
+            </h2>
+            <div id="itTicketing" class="accordion-collapse collapse"
+                 data-bs-parent="#accordionGlossary">
+                <div class="accordion-body text-muted">
+                    IT Ticketing System adalah sistem pencatatan dan pengelolaan
+                    laporan atau permintaan layanan IT yang dibuat oleh pengguna
+                    agar setiap permasalahan dapat ditangani secara terstruktur,
+                    terdokumentasi, dan terpantau dengan baik.
+                </div>
+            </div>
+        </div>
+
+        <!-- STATUS TIKET -->
+        <div class="accordion-item border-0 mb-2">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed rounded-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#statusTicket">
+                    📊 Status Tiket
+                </button>
+            </h2>
+            <div id="statusTicket" class="accordion-collapse collapse"
+                 data-bs-parent="#accordionGlossary">
+                <div class="accordion-body text-muted">
+                    <ul class="mb-0">
+                        <li><strong>Open</strong> — Tiket baru yang menunggu penanganan IT Support.</li>
+                        <li><strong>In Progress</strong> — Tiket sedang dianalisis atau diperbaiki.</li>
+                        <li><strong>Closed</strong> — Tiket telah selesai ditangani.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- KATEGORI MASALAH -->
+        <div class="accordion-item border-0 mb-2">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed rounded-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#categoryTicket">
+                    🧩 Kategori Permasalahan IT
+                </button>
+            </h2>
+            <div id="categoryTicket" class="accordion-collapse collapse"
+                 data-bs-parent="#accordionGlossary">
+                <div class="accordion-body text-muted">
+                    <ul class="mb-0">
+                        <li><strong>Hardware</strong> — Masalah perangkat fisik (PC, printer, dll).</li>
+                        <li><strong>Software</strong> — Masalah aplikasi atau sistem operasi.</li>
+                        <li><strong>Network</strong> — Kendala jaringan atau koneksi internet.</li>
+                        <li><strong>Email</strong> — Masalah akun email perusahaan.</li>
+                        <li><strong>Lainnya</strong> — Permintaan akses atau kebutuhan IT lainnya.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIPS PENGGUNA -->
+        <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed rounded-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#tipsTicket">
+                    💡 Tips Membuat Tiket yang Baik
+                </button>
+            </h2>
+            <div id="tipsTicket" class="accordion-collapse collapse"
+                 data-bs-parent="#accordionGlossary">
+                <div class="accordion-body text-muted">
+                    Pastikan deskripsi tiket ditulis secara jelas dan lengkap,
+                    sertakan informasi pendukung seperti pesan error, lokasi,
+                    dan jenis perangkat agar proses penanganan dapat dilakukan
+                    lebih cepat dan tepat.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 
 </div>
 

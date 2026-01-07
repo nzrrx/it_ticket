@@ -42,6 +42,8 @@ if (!$ticket) {
     exit;
 }
 
+
+
 /* =====================
    UPDATE STATUS & NOTE
 ===================== */
@@ -49,15 +51,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status']) && !isset($
 
     $status = $_POST['status'];
 
-    $update = $conn->prepare("
-        UPDATE tickets 
-        SET status = ?, updated_at = NOW()
-        WHERE id = ?
-    ");
-    $update->bind_param("si", $status, $ticket_id);
-    $update->execute();
+    // =====================
+    // STATUS: IN PROGRESS
+    // =====================
+    if ($status === 'In Progress') {
 
-    header("Location: detail-ticket.php?id=" . $ticket_id);
+        $update = $conn->prepare("
+            UPDATE tickets
+            SET status = 'In Progress',
+                assigned_to = ?,
+                updated_at = NOW()
+            WHERE id = ?
+        ");
+        $update->bind_param("ii", $admin_id, $ticket_id);
+        $update->execute();
+    }
+
+    // =====================
+    // STATUS: CLOSED
+    // =====================
+    elseif ($status === 'Closed') {
+
+        $update = $conn->prepare("
+            UPDATE tickets
+            SET status = 'Closed',
+                assigned_to = ?,
+                updated_at = NOW()
+            WHERE id = ?
+        ");
+        $update->bind_param("ii", $admin_id, $ticket_id);
+        $update->execute();
+    }
+
+    // =====================
+    // STATUS: OPEN (RESET)
+    // =====================
+    elseif ($status === 'Open') {
+
+        $update = $conn->prepare("
+            UPDATE tickets
+            SET status = 'Open',
+                assigned_to = NULL,
+                updated_at = NOW()
+            WHERE id = ?
+        ");
+        $update->bind_param("i", $ticket_id);
+        $update->execute();
+    }
+
+    header("Location: detail-ticket.php?id={$ticket_id}");
     exit;
 }
 

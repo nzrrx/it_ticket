@@ -137,7 +137,7 @@ $tickets = $stmt->get_result();
                                 <th>Prioritas</th>
                                 <th>Status</th>
                                 <th>Tanggal</th>
-                                <th>Di-Close Oleh</th>
+                                <th>Checked By</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -164,7 +164,10 @@ $tickets = $stmt->get_result();
                                     </td>
                                     <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
                                     <td>
-                                        <?php if ($row['status'] === 'Closed' && !empty($row['admin_name'])): ?>
+                                        <?php if (
+                                            in_array($row['status'], ['Closed', 'In Progress'])
+                                            && !empty($row['admin_name'])
+                                        ): ?>
                                             <span class="badge bg-success">
                                                 <?= htmlspecialchars($row['admin_name']) ?>
                                             </span>

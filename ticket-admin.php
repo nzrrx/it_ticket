@@ -108,7 +108,7 @@ $tickets = $stmt->get_result();
             <i class="bi bi-speedometer2 me-2"></i> Dashboard
         </a>
 
-        <a href="ticket-admin.php"  class="active">
+        <a href="ticket-admin.php" class="active">
             <i class="bi bi-ticket-detailed me-2"></i> Semua Tiket
         </a>
 
@@ -183,14 +183,17 @@ $tickets = $stmt->get_result();
                                     </td>
                                     <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
                                     <td>
-    <?php if ($row['status'] === 'Closed' && !empty($row['admin_name'])): ?>
-        <span class="badge bg-success">
-            <?= htmlspecialchars($row['admin_name']) ?>
-        </span>
-    <?php else: ?>
-        <span class="text-muted">-</span>
-    <?php endif; ?>
-</td>
+                                        <?php if (
+                                            in_array($row['status'], ['Closed', 'In Progress'])
+                                            && !empty($row['admin_name'])
+                                        ): ?>
+                                            <span class="badge bg-success">
+                                                <?= htmlspecialchars($row['admin_name']) ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
 
                                 </tr>
                             <?php endwhile; ?>
