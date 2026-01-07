@@ -59,28 +59,35 @@ $latest = $conn->query("
     JOIN users u ON t.user_id = u.id
     ORDER BY t.created_at DESC
     LIMIT 5
-");
-
-/* HITUNG PESAN BARU (TANPA is_read) */
+    ");
+    
+    /* HITUNG PESAN BARU (TANPA is_read) */
 $stmtNotif = $conn->prepare("
     SELECT COUNT(*) AS total
-    FROM messages m
+    FROM ticket_replies m
     JOIN tickets t ON m.ticket_id = t.id
     WHERE t.user_id = ?
       AND m.user_id != ?
+      AND m.is_read = 0
 ");
 $stmtNotif->bind_param("ii", $user_id, $user_id);
 $stmtNotif->execute();
 $unreadMessage = $stmtNotif->get_result()->fetch_assoc()['total'];
 
-/* PREVIEW PESAN TERBARU */
+/* PREVIEW PESAN (MAX 2 HARI TERAKHIR) */
 $stmtPreview = $conn->prepare("
-    SELECT m.message, m.created_at, u.name
-    FROM messages m
+    SELECT 
+        m.id,
+        m.ticket_id,
+        m.message,
+        m.created_at,
+        u.name
+    FROM ticket_replies m
     JOIN tickets t ON m.ticket_id = t.id
     JOIN users u ON m.user_id = u.id
     WHERE t.user_id = ?
       AND m.user_id != ?
+      AND m.is_read = 0
     ORDER BY m.created_at DESC
     LIMIT 5
 ");
@@ -222,7 +229,11 @@ $previewMessages = $stmtPreview->get_result();
             <?php while ($msg = $previewMessages->fetch_assoc()): ?>
                 <a href="ticket-user.php"
                    class="dropdown-item small">
-                    <strong><?= htmlspecialchars($msg['name']); ?></strong><br>
+                    <strong><?= htmlspecialchars($msg['name']); ?></strong>
+                    <small class="text-muted">
+            <?php echo date('l, d M Y H:i', strtotime($msg['created_at'])) ?>
+        </small>
+        <br>
                     <span class="text-muted">
                         <?= htmlspecialchars(substr($msg['message'], 0, 40)); ?>...
                     </span>
@@ -240,6 +251,8 @@ $previewMessages = $stmtPreview->get_result();
         </a>
     </div>
 </div>
+
+
 
 
         <!-- STATUS ONLINE -->
@@ -391,6 +404,16 @@ $previewMessages = $stmtPreview->get_result();
 
 
 </div>
+<script>
+document.getElementById('messageDropdown')
+    .addEventListener('show.bs.dropdown', function () {
+
+        fetch('mark_read.php', { method: 'POST' });
+
+        const badge = document.getElementById('messageBadge');
+        if (badge) badge.remove();
+    });
+</script>
 
 </body>
 </html>
