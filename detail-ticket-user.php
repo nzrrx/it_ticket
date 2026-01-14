@@ -82,6 +82,23 @@
     $replies->bind_param("i", $ticket_id);
     $replies->execute();
     $chats = $replies->get_result();
+
+//mark read
+$replies->bind_param("i", $ticket_id);
+$replies->execute();
+$chats = $replies->get_result();
+
+$ticket_id = (int) $_GET['id'];
+
+$stmt = $conn->prepare("
+    UPDATE ticket_replies
+    SET is_read = 1
+    WHERE ticket_id = ?
+      AND user_id != ?
+      AND is_read = 0
+");
+$stmt->bind_param("ii", $ticket_id, $user_id);
+$stmt->execute();    
 ?>
 
 
@@ -90,7 +107,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Detail Ticket | </title>
+    <title>Detail Ticket | MICS IT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -153,7 +170,7 @@
 
 <!-- SIDEBAR -->
     <div class="sidebar p-4">
-        <h4 class="mb-4">🎫 MICSTIX</h4>
+        <h4 class="mb-4">🎫 MICS IT</h4>
 
         <a href="dashboard.php">
             <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -181,9 +198,10 @@
                 <h5 class="mb-0">Detail Ticket #<?php echo $ticket['id'] ?></h5>
                 <small class="text-muted"><?php echo htmlspecialchars($ticket['user_name']) ?></small>
             </div>
-            <span class="badge
-        <?php echo $ticket['status'] == 'Open' ? 'badge-open' : ($ticket['status'] == 'In Progress' ? 'badge-process' : 'badge-closed') ?>">
-                <?php echo $ticket['status'] ?>
+            <span class="badge bg-<?=
+                                    $ticket['status'] == 'Open' ? 'primary' : ($ticket['status'] == 'In Progress' ? 'info' : ($ticket['status'] == 'Solved' ? 'success' : 'dark'))
+                                    ?>">
+                <?= $ticket['status'] ?>
             </span>
         </div>
 
@@ -254,6 +272,10 @@
             <!-- PERCAPAKAN -->
 <div class="col-md-4">
     <div class="card p-4">
+        <a href="ticket-user.php" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                    <hr>
         <h5 class="mb-3">💬 Percakapan</h5>
 
         <div style="max-height:350px; overflow-y:auto">

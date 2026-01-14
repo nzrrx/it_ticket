@@ -74,7 +74,7 @@ $stmtNotif->bind_param("ii", $user_id, $user_id);
 $stmtNotif->execute();
 $unreadMessage = $stmtNotif->get_result()->fetch_assoc()['total'];
 
-/* PREVIEW PESAN (MAX 2 HARI TERAKHIR) */
+/* PREVIEW PESAN */
 $stmtPreview = $conn->prepare("
     SELECT 
         m.id,
@@ -102,7 +102,7 @@ $previewMessages = $stmtPreview->get_result();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard | IT Ticketing</title>
+    <title>Dashboard | MICS IT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap -->
@@ -112,6 +112,10 @@ $previewMessages = $stmtPreview->get_result();
 
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 
     <style>
         body {
@@ -175,7 +179,7 @@ $previewMessages = $stmtPreview->get_result();
 
 <!-- SIDEBAR -->
 <div class="sidebar p-4">
-    <h4 class="mb-4">🎫 MICSTIX</h4>
+    <h4 class="mb-4">🎫 MICS IT</h4>
 
     <a href="dashboard.php"  class="active">
         <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -206,14 +210,16 @@ $previewMessages = $stmtPreview->get_result();
 
     <div class="d-flex align-items-center gap-3">
 
-        <!-- DROPDOWN PESAN -->
+<!-- DROPDOWN PESAN -->
 <div class="dropdown">
-    <a href="#" class="text-decoration-none text-dark position-relative"
-       data-bs-toggle="dropdown">
+    <a href="#" id="messageDropdown"
+       class="text-decoration-none text-dark position-relative"
+       data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-chat-dots fs-5"></i>
 
         <?php if ($unreadMessage > 0): ?>
-            <span class="position-absolute top-0 start-100 translate-middle
+            <span id="messageBadge"
+                  class="position-absolute top-0 start-100 translate-middle
                          badge rounded-pill bg-danger">
                 <?= $unreadMessage ?>
             </span>
@@ -221,22 +227,30 @@ $previewMessages = $stmtPreview->get_result();
     </a>
 
     <div class="dropdown-menu dropdown-menu-end shadow p-2"
-         style="width: 300px;">
+         style="width: 320px;">
 
         <h6 class="dropdown-header">Pesan Terbaru</h6>
 
         <?php if ($previewMessages->num_rows > 0): ?>
             <?php while ($msg = $previewMessages->fetch_assoc()): ?>
-                <a href="ticket-user.php"
-                   class="dropdown-item small">
-                    <strong><?= htmlspecialchars($msg['name']); ?></strong>
-                    <small class="text-muted">
-            <?php echo date('l, d M Y H:i', strtotime($msg['created_at'])) ?>
-        </small>
-        <br>
-                    <span class="text-muted">
-                        <?= htmlspecialchars(substr($msg['message'], 0, 40)); ?>...
-                    </span>
+                <a href="detail-ticket-user.php?id=<?= $msg['ticket_id']; ?>"
+   class="dropdown-item small py-2 message-item"
+   data-message-id="<?= $msg['id']; ?>">
+
+                    <div class="d-flex justify-content-between">
+                        <strong><?= htmlspecialchars($msg['name']); ?></strong>
+                        <small class="text-muted">
+                            <?= date('d M H:i', strtotime($msg['created_at'])); ?>
+                        </small>
+                    </div>
+
+                    <div class="text-muted small">
+                        Tiket #<?= $msg['ticket_id']; ?>
+                    </div>
+
+                    <div class="text-muted">
+                        <?= htmlspecialchars(substr($msg['message'], 0, 45)); ?>…
+                    </div>
                 </a>
             <?php endwhile; ?>
         <?php else: ?>
@@ -246,7 +260,8 @@ $previewMessages = $stmtPreview->get_result();
         <?php endif; ?>
 
         <div class="dropdown-divider"></div>
-        <a href="ticket-user.php" class="dropdown-item text-center small fw-semibold">
+        <a href="ticket-user.php"
+           class="dropdown-item text-center small fw-semibold">
             Lihat semua tiket
         </a>
     </div>
@@ -408,11 +423,21 @@ $previewMessages = $stmtPreview->get_result();
 document.getElementById('messageDropdown')
     .addEventListener('show.bs.dropdown', function () {
 
-        fetch('mark_read.php', { method: 'POST' });
-
-        const badge = document.getElementById('messageBadge');
-        if (badge) badge.remove();
+        //mark read
     });
+</script>
+<script>
+document.querySelectorAll('.message-item').forEach(item => {
+    item.addEventListener('click', function () {
+        const messageId = this.dataset.messageId;
+
+        fetch('mark-read.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'message_id=' + messageId
+        });
+    });
+});
 </script>
 
 </body>

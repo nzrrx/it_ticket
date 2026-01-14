@@ -45,11 +45,15 @@ $tickets = $stmt->get_result();
 
 <head>
     <meta charset="UTF-8">
-    <title>Tiket Saya | IT Ticketing</title>
+    <title>Tiket Saya | MICS IT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 
     <style>
         body {
@@ -74,6 +78,10 @@ $tickets = $stmt->get_result();
             margin-bottom: 5px;
         }
 
+        .sidebar h4 {
+            font-weight: 700;
+        }
+
         .sidebar a.active,
         .sidebar a:hover {
             background: rgba(255, 255, 255, .2);
@@ -95,7 +103,7 @@ $tickets = $stmt->get_result();
 <body>
     <!-- SIDEBAR -->
     <div class="sidebar p-4">
-        <h4 class="mb-4">🎫 MICSTIX</h4>
+        <h4 class="mb-4">🎫 MICS IT</h4>
 
         <a href="dashboard.php">
             <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -106,7 +114,7 @@ $tickets = $stmt->get_result();
         <a href="ticket-user.php" class="active">
             <i class="bi bi-ticket-detailed me-2"></i> Tiket Saya
         </a>
-        <a href="#">
+        <a href="profil.php">
             <i class="bi bi-person me-2"></i> Profil
         </a>
         <a href="logout.php">
@@ -136,7 +144,8 @@ $tickets = $stmt->get_result();
                                 <th>Kategori</th>
                                 <th>Prioritas</th>
                                 <th>Status</th>
-                                <th>Tanggal</th>
+                                <th>Dibuat</th>
+                                <th>Jam</th>
                                 <th>Checked By</th>
                             </tr>
                         </thead>
@@ -163,6 +172,7 @@ $tickets = $stmt->get_result();
                                         </span>
                                     </td>
                                     <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
+                                    <td><?php echo date('H:i', strtotime($row['created_at'])) ?></td>
                                     <td>
                                         <?php if (
                                             in_array($row['status'], ['Closed', 'In Progress'])

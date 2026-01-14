@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Buat Tiket | IT Ticketing</title>
+    <title>Buat Tiket | MICSTIX</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap -->
@@ -202,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!-- SIDEBAR -->
 <div class="sidebar p-4">
-    <h4 class="mb-4">🎫 MICSTIX</h4>
+    <h4 class="mb-4">🎫 MICS IT</h4>
 
     <a href="dashboard.php">
         <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a href="ticket-user.php">
         <i class="bi bi-ticket-detailed me-2"></i> Tiket Saya
     </a>
-    <a href="#">
+    <a href="profil.php">
         <i class="bi bi-person me-2"></i> Profil
     </a>
     <a href="logout.php">

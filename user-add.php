@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Tambah User | Admin</title>
+<title>Tambah User | MICS IT</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -66,7 +66,7 @@ body{
 
     <!-- SIDEBAR -->
 <div class="sidebar p-4">
-<h4 class="mb-4">🛠️ MICSTIX</h4>
+<h4 class="mb-4">🛠️ MICS IT</h4>
 
 <a href="ticket.php">
 <i class="bi bi-speedometer2 me-2"></i> Dashboard

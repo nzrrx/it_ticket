@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Login | IT Ticketing</title>
+    <title>Login | MICS IT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap 5 -->
@@ -147,7 +147,7 @@ form.submitting {
 <div class="card login-card p-4">
     <div class="card-header">
         <h4>🔐 Login Account</h4>
-        <p class="text-muted mb-0">MICSTIX Ticketing System</p>
+        <p class="text-muted mb-0">MICS IT Ticketing System</p>
     </div>
 
     <div class="card-body">

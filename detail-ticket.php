@@ -51,6 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status']) && !isset($
 
     $status = $_POST['status'];
 
+    // ❌ Jika tiket sudah Closed & bukan emergency → BLOK
+    if ($ticket['status'] === 'Closed' && empty($_POST['emergency'])) {
+        header("Location: detail-ticket.php?id={$ticket_id}&error=locked");
+        exit;
+    }
+
+
     // =====================
     // STATUS: IN PROGRESS
     // =====================
@@ -138,9 +145,25 @@ $replies = $conn->prepare("
     WHERE r.ticket_id = ?
     ORDER BY r.created_at ASC
 ");
+
+//mark read
 $replies->bind_param("i", $ticket_id);
 $replies->execute();
 $chats = $replies->get_result();
+
+$ticket_id = (int) $_GET['id'];
+
+$stmt = $conn->prepare("
+    UPDATE ticket_replies
+    SET is_read = 1
+    WHERE ticket_id = ?
+      AND user_id != ?
+      AND is_read = 0
+");
+$stmt->bind_param("ii", $ticket_id, $admin_id);
+$stmt->execute();
+
+
 ?>
 
 <!DOCTYPE html>
@@ -148,7 +171,7 @@ $chats = $replies->get_result();
 
 <head>
     <meta charset="UTF-8">
-    <title>Detail Ticket | Admin</title>
+    <title>Detail Ticket | MICS IT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -215,7 +238,7 @@ $chats = $replies->get_result();
 
     <!-- SIDEBAR -->
     <div class="sidebar p-4">
-        <h4 class="mb-4">🛠️ MICSTIX</h4>
+        <h4 class="mb-4">🛠️ MICS IT</h4>
 
         <a href="ticket.php">
             <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -332,6 +355,7 @@ $chats = $replies->get_result();
                                 <option value="In Progress" <?= $ticket['status'] == 'In Progress' ? 'selected' : '' ?>>In Progress</option>
                                 <option value="Closed" <?= $ticket['status'] == 'Closed' ? 'selected' : '' ?>>Closed</option>
                             </select>
+                            <!-- <input type="hidden" name="emergency" value="1"> -->
                         </div>
 
                         <button class="btn btn-primary w-100">

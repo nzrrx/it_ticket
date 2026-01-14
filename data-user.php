@@ -7,6 +7,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+$keyword = $_GET['keyword'] ?? '';
+
 $stmt = $conn->prepare("
         SELECT 
     id,
@@ -15,11 +17,37 @@ $stmt = $conn->prepare("
     role,
     created_at
 FROM users
-WHERE role = 'user'
-ORDER BY created_at DESC;
+ORDER BY role DESC;
 ");
 $stmt->execute();
 $tickets = $stmt->get_result();
+
+$sql = "
+    SELECT id, name, email, role, created_at
+    FROM users
+    WHERE 1=1
+";
+
+$params = [];
+$types  = '';
+
+if (!empty($keyword)) {
+    $sql .= " AND name LIKE ? ";
+    $params[] = "%$keyword%";
+    $types .= "s";
+}
+
+$sql .= " ORDER BY role DESC";
+
+$stmt = $conn->prepare($sql);
+
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$tickets = $stmt->get_result();
+
 
 ?>
 
@@ -27,6 +55,7 @@ $tickets = $stmt->get_result();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title> Data User | MICS IT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -78,7 +107,7 @@ body {
 
     <!-- SIDEBAR -->
 <div class="sidebar p-4">
-<h4 class="mb-4">🛠️ MICSTIX</h4>
+<h4 class="mb-4">🛠️ MICS IT</h4>
 
 <a href="ticket.php">
 <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -112,6 +141,29 @@ body {
         </a>
     </div>
 
+    <div class="row mb-3">
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">
+            <i class="bi bi-search"></i> Cari Nama User
+        </label>
+        <input type="text"
+               id="searchUser"
+               class="form-control"
+               placeholder="Ketik nama user...">
+    </div>
+</div>
+
+
+    <!-- <form method="GET" class="row g-2 mb-3 align-items-end">
+
+    <div class="col-md-4">
+        <input type="text"
+               name="keyword"
+               class="form-control"
+               placeholder="Cari nama user..."
+               value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
+    </div> -->
+
 
     <div class="card shadow-sm border-0">
         <div class="card-body">
@@ -133,7 +185,7 @@ body {
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="userTable">
                 <?php $no = 1; while ($row = $tickets->fetch_assoc()): ?>
                     <tr>
                         <td><?= $no++ ?></td>
@@ -147,9 +199,10 @@ body {
                         <td><?= date('d M Y', strtotime($row['created_at'])) ?></td>
                         <td>
                             <a href="edit-data-user.php?id=<?= $row['id'] ?>"
-                               class="btn btn-sm btn-outline-primary">
-                                Detail
-                            </a>
+   class="btn btn-sm btn-outline-primary">
+   <i class="bi bi-pencil-square"></i> Edit
+</a>
+
                         </td>
                     </tr>
                 <?php endwhile; ?>
@@ -160,6 +213,26 @@ body {
         </div>
     </div>
 </div>
+<script>
+const searchInput = document.getElementById('searchUser');
+const tableBody   = document.getElementById('userTable');
+
+let timeout = null;
+
+searchInput.addEventListener('keyup', function () {
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+        const keyword = this.value;
+
+        fetch('ajax-search-user.php?keyword=' + encodeURIComponent(keyword))
+            .then(res => res.text())
+            .then(html => {
+                tableBody.innerHTML = html;
+            });
+    }, 300); // debounce 300ms
+});
+</script>
 
 </body>
 </html>
